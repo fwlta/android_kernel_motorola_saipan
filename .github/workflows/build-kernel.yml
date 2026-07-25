@@ -1,0 +1,101 @@
+name: Build Kernel - Motorola Moto G50 5G (saipan)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - '**.c'
+      - '**.h'
+      - '**.dts'
+      - '**.dtsi'
+      - 'Makefile'
+      - 'Kconfig'
+      - 'arch/arm64/configs/**'
+      - '.github/workflows/**'
+
+env:
+  ARCH: arm64
+  KERNEL_DEFCONFIG: k6833v1_64_saipan_defconfig
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison build-essential ccache cpio \
+            flex git kmod libelf-dev libncurses5-dev \
+            libssl-dev wget xz-utils zip zstd
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: kernel-saipan-${{ github.sha }}
+          max-size: 5G
+
+      - name: Download Clang
+        run: |
+          mkdir -p /tmp/clang
+          curl -fL --retry 5 --retry-delay 10 \
+            https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/archive/refs/heads/lineage-20.0.tar.gz \
+            -o /tmp/clang.tar.gz
+          tar -xf /tmp/clang.tar.gz -C /tmp/clang --strip-components=1
+          echo "/tmp/clang/bin" >> $GITHUB_PATH
+
+      - name: Download GCC 4.9
+        run: |
+          mkdir -p /tmp/gcc
+          curl -fL --retry 5 --retry-delay 10 \
+            https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/archive/refs/heads/lineage-19.1.tar.gz \
+            -o /tmp/gcc.tar.gz
+          tar -xf /tmp/gcc.tar.gz -C /tmp/gcc --strip-components=1
+          echo "/tmp/gcc/bin" >> $GITHUB_PATH
+
+      - name: Build kernel
+        run: |
+          make O=/tmp/kernel_out $KERNEL_DEFCONFIG
+          make O=/tmp/kernel_out \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            LD=ld.lld \
+            CROSS_COMPILE=aarch64-linux-android- \
+            KCFLAGS="-Wno-pointer-to-int-cast -DSAIPAN_SWTP_CONFIG" \
+            -j$(nproc) 2>&1
+
+      - name: Build AnyKernel3 zip
+        run: |
+          cd /tmp
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3 -b master
+          rm -rf AnyKernel3/.git
+          printf '%s\n' \
+            'kernel.string=Shibuya saipan' \
+            'do.devicecheck=1' \
+            'device.name1=saipan' \
+            'block=boot' \
+            'is_slot_device=auto' \
+            'ramdisk_compression=auto' > AnyKernel3/anykernel.sh
+          cp /tmp/kernel_out/arch/arm64/boot/Image AnyKernel3/
+          cd AnyKernel3
+          zip -r9 /tmp/Shibuya-saipan-AnyKernel3.zip . -x ".git/*" "README.md" "LICENSE"
+
+      - name: Upload kernel Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-Image
+          path: /tmp/kernel_out/arch/arm64/boot/Image
+          compression-level: 0
+
+      - name: Upload AnyKernel3
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shibuya-saipan-AnyKernel3.zip
+          path: /tmp/Shibuya-saipan-AnyKernel3.zip
+          compression-level: 0
