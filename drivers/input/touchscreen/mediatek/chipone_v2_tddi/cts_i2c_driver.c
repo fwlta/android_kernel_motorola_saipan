@@ -14,7 +14,7 @@ static int check_dt(struct device_node *np);
 #endif
 bool cts_show_debug_log = false;
 
-extern char lcd_panle_name[];
+/* extern char lcd_panle_name[] - stubbed for saipan */
 
 module_param_named(debug_log, cts_show_debug_log, bool, 0660);
 MODULE_PARM_DESC(debug_log, "Show debug log control");
@@ -875,11 +875,6 @@ static int __init cts_driver_init(void)
 #ifdef CONFIG_CTS_I2C_HOST
 	return i2c_add_driver(&cts_i2c_driver);
 #else
-	if (!(strstr(lcd_panle_name, "icnl"))) {
-		pr_err("panle_name is %s;\n", lcd_panle_name);
-		return -ENODEV;
-	}
-
 	pr_err("cts_driver_init spi 20210909 by fsong");
 	return spi_register_driver(&cts_spi_driver);
 #endif
