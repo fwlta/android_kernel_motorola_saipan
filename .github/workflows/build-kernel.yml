@@ -68,6 +68,8 @@ jobs:
             ${{ github.workspace }}/arch/arm64/configs/ext_config/moto-k6833v1_64-saipan.config
           cd ${{ github.workspace }}
           make O=/tmp/kernel_out olddefconfig
+          sed -i '/CONFIG_TOUCHSCREEN_MTK_TOUCH=""/a CONFIG_TOUCHSCREEN_CHIPONE_V2_TDDI=y' /tmp/kernel_out/.config
+          make O=/tmp/kernel_out olddefconfig
           make O=/tmp/kernel_out \
             CC=clang \
             CLANG_TRIPLE=aarch64-linux-gnu- \
