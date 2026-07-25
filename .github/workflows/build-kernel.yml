@@ -81,29 +81,27 @@ jobs:
           cd /tmp
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3 -b master
           rm -rf AnyKernel3/.git
-          cat > AnyKernel3/anykernel.sh << 'AK3EOF'
-properties() { '
-kernel.string=Shibuya saipan
-do.devicecheck=1
-device.name1=saipan
-do.modules=0
-do.systemless=1
-do.cleanup=1
-do.cleanuponabort=0
-'; }
-
-BLOCK=boot;
-IS_SLOT_DEVICE=auto;
-RAMDISK_COMPRESSION=auto;
-PATCH_VBMETA_FLAG=auto;
-
-. tools/ak3-core.sh;
-
-dump_boot;
-write_boot;
-AK3EOF
-          cp /tmp/kernel_out/arch/arm64/boot/Image AnyKernel3/
           cd AnyKernel3
+          echo "properties() { '" > anykernel.sh
+          echo "kernel.string=Shibuya saipan" >> anykernel.sh
+          echo "do.devicecheck=1" >> anykernel.sh
+          echo "device.name1=saipan" >> anykernel.sh
+          echo "do.modules=0" >> anykernel.sh
+          echo "do.systemless=1" >> anykernel.sh
+          echo "do.cleanup=1" >> anykernel.sh
+          echo "do.cleanuponabort=0" >> anykernel.sh
+          echo "'; }" >> anykernel.sh
+          echo "" >> anykernel.sh
+          echo "BLOCK=boot;" >> anykernel.sh
+          echo "IS_SLOT_DEVICE=auto;" >> anykernel.sh
+          echo "RAMDISK_COMPRESSION=auto;" >> anykernel.sh
+          echo "PATCH_VBMETA_FLAG=auto;" >> anykernel.sh
+          echo "" >> anykernel.sh
+          echo ". tools/ak3-core.sh;" >> anykernel.sh
+          echo "" >> anykernel.sh
+          echo "dump_boot;" >> anykernel.sh
+          echo "write_boot;" >> anykernel.sh
+          cp /tmp/kernel_out/arch/arm64/boot/Image .
           zip -r9 /tmp/Shibuya-saipan-AnyKernel3.zip . -x ".git/*" "README.md" "LICENSE"
 
       - name: Upload kernel Image
