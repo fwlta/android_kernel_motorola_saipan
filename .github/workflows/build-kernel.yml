@@ -81,13 +81,27 @@ jobs:
           cd /tmp
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3 -b master
           rm -rf AnyKernel3/.git
-          printf '%s\n' \
-            'kernel.string=Shibuya saipan' \
-            'do.devicecheck=1' \
-            'device.name1=saipan' \
-            'block=boot' \
-            'is_slot_device=auto' \
-            'ramdisk_compression=auto' > AnyKernel3/anykernel.sh
+          cat > AnyKernel3/anykernel.sh << 'AK3EOF'
+properties() { '
+kernel.string=Shibuya saipan
+do.devicecheck=1
+device.name1=saipan
+do.modules=0
+do.systemless=1
+do.cleanup=1
+do.cleanuponabort=0
+'; }
+
+BLOCK=boot;
+IS_SLOT_DEVICE=auto;
+RAMDISK_COMPRESSION=auto;
+PATCH_VBMETA_FLAG=auto;
+
+. tools/ak3-core.sh;
+
+dump_boot;
+write_boot;
+AK3EOF
           cp /tmp/kernel_out/arch/arm64/boot/Image AnyKernel3/
           cd AnyKernel3
           zip -r9 /tmp/Shibuya-saipan-AnyKernel3.zip . -x ".git/*" "README.md" "LICENSE"
