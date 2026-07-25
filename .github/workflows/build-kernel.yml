@@ -65,6 +65,7 @@ jobs:
           cd /tmp/kernel_out
           ARCH=arm64 SRCARCH=arm64 ${{ github.workspace }}/scripts/kconfig/merge_config.sh -m -O . .config ${{ github.workspace }}/arch/arm64/configs/ext_config/moto-k6833v1_64-saipan.config
           cd ${{ github.workspace }}
+          make O=/tmp/kernel_out olddefconfig
           make O=/tmp/kernel_out \
             CC=clang \
             CLANG_TRIPLE=aarch64-linux-gnu- \
