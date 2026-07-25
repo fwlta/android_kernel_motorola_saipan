@@ -63,7 +63,9 @@ jobs:
         run: |
           make O=/tmp/kernel_out $KERNEL_DEFCONFIG
           cd /tmp/kernel_out
-          ARCH=arm64 SRCARCH=arm64 ${{ github.workspace }}/scripts/kconfig/merge_config.sh -m -O . .config ${{ github.workspace }}/arch/arm64/configs/ext_config/moto-k6833v1_64-saipan.config
+          ARCH=arm64 SRCARCH=arm64 ${{ github.workspace }}/scripts/kconfig/merge_config.sh -m -O . .config \
+            ${{ github.workspace }}/arch/arm64/configs/ext_config/moto-k6833v1_64.config \
+            ${{ github.workspace }}/arch/arm64/configs/ext_config/moto-k6833v1_64-saipan.config
           cd ${{ github.workspace }}
           make O=/tmp/kernel_out olddefconfig
           make O=/tmp/kernel_out \
@@ -71,7 +73,7 @@ jobs:
             CLANG_TRIPLE=aarch64-linux-gnu- \
             LD=ld.lld \
             CROSS_COMPILE=aarch64-linux-android- \
-            KCFLAGS="-Wno-pointer-to-int-cast -DSAIPAN_SWTP_CONFIG" \
+            KCFLAGS="-Wno-pointer-to-int-cast -DSAIPAN_SWTP_CONFIG -fno-builtin-stpcpy" \
             -j$(nproc) 2>&1
 
       - name: Build AnyKernel3 zip
