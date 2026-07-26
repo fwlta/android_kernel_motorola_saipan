@@ -1,0 +1,73 @@
+/*
+ * Chipone TDDI touch for saipan with replaced screen
+ * Adds SPI device node and pinmux on top of stock touch config
+ */
+&spi4 {
+    pinctrl-names = "default", "chipone_int_active",
+        "chipone_reset_active", "chipone_int_suspend",
+        "chipone_reset_suspend", "chipone_spi_mode";
+    pinctrl-0 = <&chipone_pins_default>;
+    pinctrl-1 = <&chipone_int_active>;
+    pinctrl-2 = <&chipone_reset_active>;
+    pinctrl-3 = <&chipone_int_suspend>;
+    pinctrl-4 = <&chipone_reset_suspend>;
+    pinctrl-5 = <&chipone_spi_mode>;
+
+    chipone_tddi@0 {
+        compatible = "chipone-tddi";
+        reg = <0x0>;
+        spi-max-frequency = <4800000>;
+        interrupt-parent = <&pio>;
+        interrupts = <14 0x2008>;
+        chipone,rst-gpio = <&pio 15 0x00>;
+        chipone,irq-gpio = <&pio 14 0x2008>;
+        chipone,x-res = <720>;
+        chipone,y-res = <1600>;
+        chipone,def-build-id = <0x0101>;
+        chipone,def-config-id = <0x0001>;
+        chipone,touch-charger-detect-enable;
+        chipone,touch-charger-detect-type = "notify";
+        chipone,touch-charger-detect-psy-name = "charger";
+        chipone,touch-charger-detect-psp = "POWER_SUPPLY_PROP_ONLINE";
+        chipone,touch-charger-detect-psp-poll-interval = <1000>;
+        status = "ok";
+    };
+};
+
+&pio {
+    chipone_pins_default: chipone_pins_default {
+    };
+    chipone_int_active: chipone_int_active {
+        pins_cmd_dat {
+            pinmux = <PINMUX_GPIO14__FUNC_GPIO14>;
+            input-enable;
+        };
+    };
+    chipone_reset_active: chipone_reset_active {
+        pins_cmd_dat {
+            pinmux = <PINMUX_GPIO15__FUNC_GPIO15>;
+            output-high;
+        };
+    };
+    chipone_int_suspend: chipone_int_suspend {
+        pins_cmd_dat {
+            pinmux = <PINMUX_GPIO14__FUNC_GPIO14>;
+            output-low;
+        };
+    };
+    chipone_reset_suspend: chipone_reset_suspend {
+        pins_cmd_dat {
+            pinmux = <PINMUX_GPIO15__FUNC_GPIO15>;
+            output-low;
+        };
+    };
+    chipone_spi_mode: chipone_spi_mode {
+        pins_cmd_dat {
+            pinmux = <PINMUX_GPIO12__FUNC_SPI4_MI>,
+                <PINMUX_GPIO13__FUNC_SPI4_MO>,
+                <PINMUX_GPIO97__FUNC_SPI4_CLK>,
+                <PINMUX_GPIO98__FUNC_SPI4_CSB>;
+            drive-strength = <2>;
+        };
+    };
+};
